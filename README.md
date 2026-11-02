@@ -1,6 +1,6 @@
 # quilltopia-installer
 
-下载并安装 [quilltopia v0.0.4](https://github.com/quilltopia/quilltopia/releases/tag/v0.0.4) 的独立引导脚本。
+下载并安装 [quilltopia 最新正式 Release](https://github.com/quilltopia/quilltopia/releases/latest) 的独立引导脚本。
 
 要求 Apple Silicon Mac、macOS 26 或更高版本，以及已安装的 GitHub CLI (`gh`)。
 如果 Release 需要认证，先运行 `gh auth login`，使用有仓库读取权限的账号。
@@ -14,9 +14,17 @@ curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/ref
 这条命令跳过交互确认，并在校验、解压后清除 suite 的 `com.apple.quarantine`。
 如需交互确认且保留 quarantine，下载脚本后运行 `./install.sh`。
 
-脚本使用 `gh release download` 下载固定版本的
+脚本先用 `gh release view` 解析最新正式 Release 的 tag，再使用 `gh release download` 下载该版本的
 `quilltopia-aarch64-apple-darwin.tar.gz` 和同名 `.sha256` 文件，校验 SHA-256 后解压，
-调用其中的 `quilltopia/install.sh`。不会下载 latest。
+调用其中的 `quilltopia/install.sh`。默认每次运行重新解析 latest，不选择 Preview，也不分别选择公共包版本。
+
+指定版本时传入完整 Release tag（包括仓库实际使用的 `v` 前缀）；也支持已发布的 prerelease：
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/zevwings/bootstrap-installer/install.sh | sh -s -- --version v0.0.5-prerelease --force --remove-quarantine
+```
+
+`--version TAG` 仅由在线脚本消费，不转交包内安装器。不自动补前缀；指定 tag 或所需资产不存在时直接失败，不回退到 latest。
 
 `--force` 和 `--install-root` 传递给包内安装器：
 
@@ -40,7 +48,7 @@ curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/ref
 也不会替代非交互安装所需的 `--force`。
 
 默认安装到 `~/.quilltopia`。安装和恢复行为以目标版本的
-[安装说明](https://github.com/quilltopia/quilltopia/blob/v0.0.4/INSTALL.md) 为准。
+[安装说明](https://github.com/quilltopia/quilltopia/blob/main/INSTALL.md) 为准。
 
 下载、校验或解压失败会终止，不运行安装器。成功后删除临时下载与解包目录；
 安装失败或中断时保留 suite 并输出路径，以便使用其中的独立 `bin/qu` 恢复安装。

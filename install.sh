@@ -2,7 +2,6 @@
 set -eu
 
 REPOSITORY=quilltopia/quilltopia
-VERSION=v0.0.4
 ARCHIVE=quilltopia-aarch64-apple-darwin.tar.gz
 
 fail() {
@@ -12,16 +11,22 @@ fail() {
 
 usage() {
   printf '%s\n' \
-    'Usage: install.sh [--force] [--install-root PATH] [--remove-quarantine]' \
-    'Download and install quilltopia v0.0.4 for Apple Silicon macOS 26+.'
+    'Usage: install.sh [--version TAG] [--force] [--install-root PATH] [--remove-quarantine]' \
+    'Install the latest stable release or an exact --version TAG for Apple Silicon macOS 26+.'
 }
 
+VERSION=
 install_force=0
 remove_quarantine=0
 has_install_root=0
 install_root=
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --version)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--version needs a release tag'
+      case "$2" in -*) fail '--version needs a release tag, not an option' ;; esac
+      VERSION=$2
+      shift 2 ;;
     --force) install_force=1; shift ;;
     --remove-quarantine) remove_quarantine=1; shift ;;
     --install-root)
@@ -68,6 +73,11 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 trap 'exit 129' HUP
 
+# Resolve latest once; an explicit tag is downloaded exactly, with no fallback.
+if [ -z "$VERSION" ]; then
+  VERSION=$(gh release view --repo "$REPOSITORY" --json tagName --jq '.tagName')
+  [ -n "$VERSION" ] || fail 'latest stable release has no tag'
+fi
 printf 'Downloading quilltopia %s from %s…\n' "$VERSION" "$REPOSITORY"
 gh release download "$VERSION" --repo "$REPOSITORY" \
   --pattern "$ARCHIVE" --pattern "$ARCHIVE.sha256" --dir "$work_dir"
