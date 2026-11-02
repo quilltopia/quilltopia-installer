@@ -5,9 +5,14 @@
 要求 Apple Silicon Mac、macOS 26 或更高版本，以及已安装的 GitHub CLI (`gh`)。
 如果 Release 需要认证，先运行 `gh auth login`，使用有仓库读取权限的账号。
 
+确认下载来源可信后，一行安装：
+
 ```sh
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/zevwings/bootstrap-installer/install.sh | sh -s -- --force --remove-quarantine
 ```
+
+这条命令跳过交互确认，并在校验、解压后清除 suite 的 `com.apple.quarantine`。
+如需交互确认且保留 quarantine，下载脚本后运行 `./install.sh`。
 
 脚本使用 `gh release download` 下载固定版本的
 `quilltopia-aarch64-apple-darwin.tar.gz` 和同名 `.sha256` 文件，校验 SHA-256 后解压，
@@ -28,9 +33,6 @@
 
 ```sh
 ./install.sh --remove-quarantine
-
-# 通过 raw 链接进行非交互安装
-curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/zevwings/bootstrap-installer/install.sh | sh -s -- --force --remove-quarantine
 ```
 
 该选项只删除 `com.apple.quarantine`，保留其它扩展属性；默认不执行。
