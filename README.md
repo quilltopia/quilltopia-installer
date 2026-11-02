@@ -8,7 +8,7 @@
 确认下载来源可信后，一行安装：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/zevwings/bootstrap-installer/install.sh | sh -s -- --force --remove-quarantine
+curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/main/install.sh | sh -s -- --force --remove-quarantine
 ```
 
 这条命令跳过交互确认，并在校验、解压后清除 suite 的 `com.apple.quarantine`。
@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/ref
 指定版本时传入完整 Release tag（包括仓库实际使用的 `v` 前缀）；也支持已发布的 prerelease：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/zevwings/bootstrap-installer/install.sh | sh -s -- --version v0.0.5-prerelease --force --remove-quarantine
+curl -fsSL https://raw.githubusercontent.com/quilltopia/quilltopia-installer/refs/heads/main/install.sh | sh -s -- --version v0.0.5-prerelease --force --remove-quarantine
 ```
 
 `--version TAG` 仅由在线脚本消费，不转交包内安装器。不自动补前缀；指定 tag 或所需资产不存在时直接失败，不回退到 latest。
