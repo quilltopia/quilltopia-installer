@@ -12,29 +12,43 @@ fail() {
 
 usage() {
   printf '%s\n' \
-    'Usage: install.sh [--force] [--install-root PATH]' \
+    'Usage: install.sh [--force] [--install-root PATH] [--remove-quarantine]' \
     'Download and install quilltopia v0.0.4 for Apple Silicon macOS 26+.'
 }
 
-# Validate without consuming the arguments forwarded to the archive installer.
-validate_arguments() {
-  while [ "$#" -gt 0 ]; do
-    case "$1" in
-      --force) shift ;;
-      --install-root)
-        [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--install-root needs a path'
-        shift 2 ;;
-      -h|--help) usage; exit 0 ;;
-      *) fail "unknown option: $1" ;;
-    esac
-  done
-}
+install_force=0
+remove_quarantine=0
+has_install_root=0
+install_root=
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --force) install_force=1; shift ;;
+    --remove-quarantine) remove_quarantine=1; shift ;;
+    --install-root)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || fail '--install-root needs a path'
+      install_root=$2
+      has_install_root=1
+      shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) fail "unknown option: $1" ;;
+  esac
+done
 
-validate_arguments "$@"
+# Only the archive installer's own arguments are forwarded.
+set --
+if [ "$install_force" -eq 1 ]; then
+  set -- "$@" --force
+fi
+if [ "$has_install_root" -eq 1 ]; then
+  set -- "$@" --install-root "$install_root"
+fi
 for required_command in gh tar shasum mktemp uname sw_vers sed; do
   command -v "$required_command" >/dev/null 2>&1 \
     || fail "$required_command not found on PATH"
 done
+if [ "$remove_quarantine" -eq 1 ]; then
+  command -v xattr >/dev/null 2>&1 || fail 'xattr not found on PATH'
+fi
 [ "$(uname -s)" = Darwin ] || fail 'macOS is required'
 [ "$(uname -m)" = arm64 ] || fail 'Apple Silicon is required'
 macos_major=$(sw_vers -productVersion | sed 's/\..*//')
@@ -68,6 +82,11 @@ tar -xzf "$work_dir/$ARCHIVE" -C "$work_dir"
 
 # Preserve the independent recovery binary if installation fails or is interrupted.
 keep_suite=1
+if [ "$remove_quarantine" -eq 1 ]; then
+  printf 'Removing com.apple.quarantine from the verified suite…\n'
+  xattr -r -d com.apple.quarantine "$work_dir/quilltopia" \
+    || fail 'could not remove quarantine; installation stopped'
+fi
 printf 'Running the archive installer…\n'
 /bin/sh "$work_dir/quilltopia/install.sh" "$@"
 keep_suite=0
